@@ -1,18 +1,17 @@
 <?php
 
-require_once '../html/hello.php';
+require_once __DIR__ . '/../src/hello.php';
 
 class HelloWorldTest extends PHPUnit\Framework\TestCase
 {
- public function testOutput()
- {
-    // Capture the output of hello.php
-    ob_start();
-    include '../html/hello.php';
-    $output = ob_get_clean();
+    public function testOutput()
+    {
+        ob_start();
 
-    // Assert that the output is "Hello, Docker!"
-    $this->assertEquals("Hello, Docker!", $output);
- }
+        include __DIR__ . '/../src/hello.php';
+
+        $output = ob_get_clean();
+
+        $this->assertEquals("Hello, world!", $output);
+    }
 }
-?>
