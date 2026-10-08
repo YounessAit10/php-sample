@@ -10,13 +10,12 @@ pipeline {
             }
         }
 
-        stage('Install Dependencies') {
+        stage('Build Test Image') {
             steps {
                 sh '''
-                    composer install \
-                        --no-interaction \
-                        --prefer-dist \
-                        --no-progress
+                    docker build \
+                        -f Dockerfile.test \
+                        -t php-sample-test:${BUILD_NUMBER} .
                 '''
             }
         }
@@ -24,7 +23,8 @@ pipeline {
         stage('PHP Tests') {
             steps {
                 sh '''
-                    vendor/bin/phpunit
+                    docker run --rm \
+                        php-sample-test:${BUILD_NUMBER}
                 '''
             }
         }
@@ -32,11 +32,11 @@ pipeline {
 
     post {
         success {
-            echo 'Pipeline CI réussie !'
+            echo 'CI PHP réussie !'
         }
 
         failure {
-            echo 'Pipeline CI échouée.'
+            echo 'CI PHP échouée.'
         }
 
         always {
