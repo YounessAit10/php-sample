@@ -2,8 +2,19 @@ FROM php:8.2-cli
 
 WORKDIR /app
 
+# Install system dependencies required by Composer
+RUN apt-get update \
+    && apt-get install -y --no-install-recommends \
+        unzip \
+        git \
+        libzip-dev \
+    && docker-php-ext-install zip \
+    && rm -rf /var/lib/apt/lists/*
+
+# Install Composer
 COPY --from=composer:2 /usr/bin/composer /usr/bin/composer
 
+# Install PHP dependencies
 COPY composer.json composer.lock ./
 
 RUN composer install \
@@ -11,6 +22,7 @@ RUN composer install \
     --prefer-dist \
     --no-progress
 
+# Copy application
 COPY . .
 
 CMD ["vendor/bin/phpunit"]
