@@ -29,6 +29,20 @@ pipeline {
             }
         }
 
+        stage('Debug Sonar') {
+            steps {
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        echo "URL: $SONAR_HOST_URL"
+                        echo "Token length: ${#SONAR_AUTH_TOKEN}"
+                        curl -s -u "$SONAR_AUTH_TOKEN:" "$SONAR_HOST_URL/api/authentication/validate"
+                        echo
+                        curl -s -u "$SONAR_AUTH_TOKEN:" "$SONAR_HOST_URL/api/components/show?component=php-sample"
+                    '''
+                }
+            }
+        }
+
         stage('SonarQube Analysis') {
             steps {
                 script {
