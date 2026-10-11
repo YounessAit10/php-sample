@@ -143,8 +143,10 @@ pipeline {
 
                     # Vérification : l'application répond-elle ?
                     for i in 1 2 3 4 5 6; do
-                        curl -fs http://host.docker.internal:${APP_PORT} > /dev/null && echo "App OK" && exit 0
-                        sleep 5
+                    code=$(curl -s -o /dev/null -w "%{http_code}" http://host.docker.internal:${APP_PORT}/)
+                    echo "Tentative $i : HTTP $code"
+                    [ "$code" = "200" ] && echo "App OK" && exit 0
+                    sleep 5
                     done
                     echo "L'application ne répond pas" && docker compose -p php-sample-${APP_ENV} logs && exit 1
                 '''
