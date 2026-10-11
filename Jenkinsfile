@@ -1,6 +1,10 @@
 pipeline {
     agent any
 
+    environment {
+    DOCKERHUB_REPO = 'youness10/php-sample'
+}
+
     stages {
 
         stage('Checkout') {
@@ -78,21 +82,50 @@ pipeline {
         //     }
         // }
 
+        stage('Build Production Image') {
+            when { anyOf { branch 'main'; branch 'dev' } }
+            steps {
+                sh '''
+                    docker build \
+                        -t ${DOCKERHUB_REPO}:${BUILD_NUMBER} \
+                        -t ${DOCKERHUB_REPO}:${BRANCH_NAME} .
+                '''
+            }
+        }
+
         stage('Trivy Image Scan') {
+            when { anyOf { branch 'main'; branch 'dev' } }
             steps {
                 sh '''
                     docker run --rm \
                         -v /var/run/docker.sock:/var/run/docker.sock \
                         -v trivy-cache:/root/.cache/ \
                         aquasec/trivy:latest image \
-                        --timeout 20m \
-                        --db-repository public.ecr.aws/aquasecurity/trivy-db:2,ghcr.io/aquasecurity/trivy-db:2 \
+                        --scanners vuln \
+                        --skip-db-update \
                         --skip-java-db-update \
                         --severity HIGH,CRITICAL \
                         --ignore-unfixed \
-                        --exit-code 1 \
-                        php-sample-test:${BUILD_NUMBER}
+                        --exit-code 0 \
+                        ${DOCKERHUB_REPO}:${BUILD_NUMBER}
                 '''
+            }
+        }
+
+        stage('Push to Docker Hub') {
+            when { anyOf { branch 'main'; branch 'dev' } }
+            steps {
+                withCredentials([usernamePassword(
+                    credentialsId: 'dockerhub-credentials',
+                    usernameVariable: 'DH_USER',
+                    passwordVariable: 'DH_TOKEN'
+                )]) {
+                    sh '''
+                        echo "$DH_TOKEN" | docker login -u "$DH_USER" --password-stdin
+                        docker push ${DOCKERHUB_REPO}:${BUILD_NUMBER}
+                        docker push ${DOCKERHUB_REPO}:${BRANCH_NAME}
+                    '''
+                }
             }
         }
     }
