@@ -137,19 +137,25 @@ pipeline {
                     env.APP_PORT = (env.BRANCH_NAME == 'main') ? '8082' : '8081'
                 }
                 sh '''
-                    export IMAGE_TAG=${BUILD_NUMBER}
-                    docker compose -p php-sample-${APP_ENV} pull
-                    docker compose -p php-sample-${APP_ENV} up -d --remove-orphans
+                export IMAGE_TAG=${BUILD_NUMBER}
+                docker compose -p php-sample-${APP_ENV} pull
+                docker compose -p php-sample-${APP_ENV} up -d --remove-orphans
 
-                    # Vérification : l'application répond-elle ?
-                    for i in 1 2 3 4 5 6; do
-                    code=$(curl -s -o /dev/null -w "%{http_code}" http://host.docker.internal:${APP_PORT}/)
+                sleep 5
+                for i in 1 2 3 4 5 6 7 8; do
+                    code=$(curl -s -o /dev/null -w "%{http_code}" http://host.docker.internal:${APP_PORT}/ || true)
                     echo "Tentative $i : HTTP $code"
-                    [ "$code" = "200" ] && echo "App OK" && exit 0
+                    if [ "$code" = "200" ]; then
+                        echo "App OK"
+                        exit 0
+                    fi
                     sleep 5
-                    done
-                    echo "L'application ne répond pas" && docker compose -p php-sample-${APP_ENV} logs && exit 1
-                '''
+                done
+
+                echo "L'application ne répond pas"
+                docker compose -p php-sample-${APP_ENV} logs
+                exit 1
+            '''
             }
         }
     }
