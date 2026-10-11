@@ -128,6 +128,28 @@ pipeline {
                 }
             }
         }
+
+        stage('Deploy') {
+            when { anyOf { branch 'main'; branch 'dev' } }
+            steps {
+                script {
+                    env.APP_ENV  = (env.BRANCH_NAME == 'main') ? 'prod' : 'dev'
+                    env.APP_PORT = (env.BRANCH_NAME == 'main') ? '8082' : '8081'
+                }
+                sh '''
+                    export IMAGE_TAG=${BUILD_NUMBER}
+                    docker compose -p php-sample-${APP_ENV} pull
+                    docker compose -p php-sample-${APP_ENV} up -d --remove-orphans
+
+                    # Vérification : l'application répond-elle ?
+                    for i in 1 2 3 4 5 6; do
+                        curl -fs http://host.docker.internal:${APP_PORT} > /dev/null && echo "App OK" && exit 0
+                        sleep 5
+                    done
+                    echo "L'application ne répond pas" && docker compose -p php-sample-${APP_ENV} logs && exit 1
+                '''
+            }
+        }
     }
 
     post {
