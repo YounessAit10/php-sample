@@ -17,10 +17,9 @@ pipeline {
         stage('Build Test Image') {
             steps {
                 sh '''
-                        DOCKER_BUILDKIT=0 docker build \
-                            -f Dockerfile.test \
-                            -t php-sample-test:${BUILD_NUMBER} .
-
+                    docker build \
+                        -f Dockerfile.test \
+                        -t php-sample-test:${BUILD_NUMBER} .
                 '''
             }
         }
