@@ -74,6 +74,38 @@ pipeline {
                 '''
             }
         }
+
+        stage('Trivy FS Scan') {
+            steps {
+                sh '''
+                    docker run --rm \
+                        --volumes-from jenkins \
+                        -w "$WORKSPACE" \
+                        -v trivy-cache:/root/.cache/ \
+                        aquasec/trivy:latest fs \
+                        --scanners vuln,secret,misconfig \
+                        --severity HIGH,CRITICAL \
+                        --ignore-unfixed \
+                        --exit-code 1 \
+                        .
+                '''
+            }
+        }
+
+        stage('Trivy Image Scan') {
+            steps {
+                sh '''
+                    docker run --rm \
+                        -v /var/run/docker.sock:/var/run/docker.sock \
+                        -v trivy-cache:/root/.cache/ \
+                        aquasec/trivy:latest image \
+                        --severity HIGH,CRITICAL \
+                        --ignore-unfixed \
+                        --exit-code 1 \
+                        php-sample-test:${BUILD_NUMBER}
+                '''
+            }
+        }
     }
 
     post {
