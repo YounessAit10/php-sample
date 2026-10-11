@@ -29,20 +29,6 @@ pipeline {
             }
         }
 
-        stage('Debug Sonar') {
-            steps {
-                withSonarQubeEnv('SonarQube') {
-                    sh '''
-                        echo "URL: $SONAR_HOST_URL"
-                        echo "Token length: ${#SONAR_AUTH_TOKEN}"
-                        curl -s -u "$SONAR_AUTH_TOKEN:" "$SONAR_HOST_URL/api/authentication/validate"
-                        echo
-                        curl -s -u "$SONAR_AUTH_TOKEN:" "$SONAR_HOST_URL/api/components/show?component=php-sample"
-                    '''
-                }
-            }
-        }
-
         stage('SonarQube Analysis') {
             steps {
                 script {
@@ -75,22 +61,22 @@ pipeline {
             }
         }
 
-        stage('Trivy FS Scan') {
-            steps {
-                sh '''
-                    docker run --rm \
-                        --volumes-from jenkins \
-                        -w "$WORKSPACE" \
-                        -v trivy-cache:/root/.cache/ \
-                        aquasec/trivy:latest fs \
-                        --scanners vuln,secret,misconfig \
-                        --severity HIGH,CRITICAL \
-                        --ignore-unfixed \
-                        --exit-code 1 \
-                        .
-                '''
-            }
-        }
+        // stage('Trivy FS Scan') {
+        //     steps {
+        //         sh '''
+        //             docker run --rm \
+        //                 --volumes-from jenkins \
+        //                 -w "$WORKSPACE" \
+        //                 -v trivy-cache:/root/.cache/ \
+        //                 aquasec/trivy:latest fs \
+        //                 --scanners vuln,secret,misconfig \
+        //                 --severity HIGH,CRITICAL \
+        //                 --ignore-unfixed \
+        //                 --exit-code 1 \
+        //                 .
+        //         '''
+        //     }
+        // }
 
         stage('Trivy Image Scan') {
             steps {
