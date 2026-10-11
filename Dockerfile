@@ -11,11 +11,13 @@ WORKDIR /var/www/html
 COPY --from=vendor /app/vendor ./vendor
 COPY src/ ./src/
 
-# Si votre point d'entrée (index.php) est dans src/, servez ce dossier :
 ENV APACHE_DOCUMENT_ROOT=/var/www/html/src
 RUN sed -ri -e 's!/var/www/html!${APACHE_DOCUMENT_ROOT}!g' \
     /etc/apache2/sites-available/*.conf \
     /etc/apache2/apache2.conf /etc/apache2/conf-available/*.conf
 
-USER www-data
+RUN echo "DirectoryIndex hello.php index.php index.html" > /etc/apache2/conf-available/directory-index.conf \
+    && a2enconf directory-index \
+    && echo "ServerName localhost" >> /etc/apache2/apache2.conf
+
 EXPOSE 80
