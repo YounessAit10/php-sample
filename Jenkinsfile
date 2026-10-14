@@ -55,8 +55,17 @@ pipeline {
         stage('GitLeaks') {
             steps {
                 sh '''
+                    echo "Workspace : $WORKSPACE"
+                    ls -la "$WORKSPACE"
+
+                    if [ ! -d "$WORKSPACE/.git" ]; then
+                        echo "ERREUR : le dossier .git est absent du workspace"
+                        exit 1
+                    fi
+
                     docker run --rm \
                         -v "$WORKSPACE:/repo" \
+                        -w /repo \
                         zricethezav/gitleaks:latest \
                         detect \
                         --source=/repo \
@@ -141,7 +150,7 @@ pipeline {
                 docker compose -p php-sample-${APP_ENV} pull
                 docker compose -p php-sample-${APP_ENV} up -d --remove-orphans
 
-                sleep 5
+                sleep 30
                 for i in 1 2 3 4 5 6 7 8; do
                     code=$(curl -s -o /dev/null -w "%{http_code}" http://host.docker.internal:${APP_PORT}/ || true)
                     echo "Tentative $i : HTTP $code"
@@ -149,7 +158,7 @@ pipeline {
                         echo "App OK"
                         exit 0
                     fi
-                    sleep 5
+                    sleep 10
                 done
 
                 echo "L'application ne répond pas"
