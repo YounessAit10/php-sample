@@ -75,7 +75,7 @@ pipeline {
                         --report-path "$WORKSPACE/gitleaks-report.json" \
                         2>&1 | tee gitleaks.log
 
-                    if grep -q "0 commits scanned" gitleaks.log; then
+                    if grep -qE '(^|[^0-9])0 commits scanned' gitleaks.log; then
                         echo "ERREUR : aucun commit scanné, vérifier le montage du workspace"
                         exit 1
                     fi
