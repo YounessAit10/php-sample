@@ -1,2 +1,4 @@
 db/
 README.Docker.md
+vendor/
+.phpunit.result.cache
