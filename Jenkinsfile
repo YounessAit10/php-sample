@@ -53,17 +53,40 @@ pipeline {
         }
 
         stage('GitLeaks') {
-                    steps {
-                        sh '''
-                            docker run --rm \
-                                -v "$WORKSPACE:/repo" \
-                                zricethezav/gitleaks:latest \
-                                detect \
-                                --source=/repo \
-                                --no-banner
-                        '''
-                    }
+            options { timeout(time: 5, unit: 'MINUTES') }
+            steps {
+                sh '''#!/bin/bash
+                    set -euo pipefail
+
+                    [ -d "$WORKSPACE/.git" ] || { echo "ERREUR : .git absent du workspace"; exit 1; }
+
+                    docker run --rm \
+                        --volumes-from "$(hostname)" \
+                        -w "$WORKSPACE" \
+                        -e GIT_CONFIG_COUNT=1 \
+                        -e GIT_CONFIG_KEY_0=safe.directory \
+                        -e GIT_CONFIG_VALUE_0="$WORKSPACE" \
+                        zricethezav/gitleaks:latest \
+                        detect \
+                        --source="$WORKSPACE" \
+                        --no-banner \
+                        --redact \
+                        --report-format json \
+                        --report-path "$WORKSPACE/gitleaks-report.json" \
+                        2>&1 | tee gitleaks.log
+
+                    if grep -qE '(^|[^0-9])0 commits scanned' gitleaks.log; then
+                        echo "ERREUR : aucun commit scanné, vérifier le montage du workspace"
+                        exit 1
+                    fi
+                '''
+            }
+            post {
+                always {
+                    archiveArtifacts artifacts: 'gitleaks-report.json, gitleaks.log', allowEmptyArchive: true
                 }
+            }
+        }
 
         // stage('Trivy FS Scan') {
         //     steps {
