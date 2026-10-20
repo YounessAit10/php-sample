@@ -129,7 +129,7 @@ pipeline {
                         --skip-java-db-update \
                         --severity HIGH,CRITICAL \
                         --ignore-unfixed \
-                        --exit-code 0 \
+                        --exit-code 1 \
                         ${DOCKERHUB_REPO}:${BUILD_NUMBER}
                 '''
             }

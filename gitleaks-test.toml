@@ -1,0 +1,6 @@
+title = "Gitleaks Test Config"
+
+[[rules]]
+id = "test-secret"
+description = "Detect the synthetic test token"
+regex = '''ghp_ABCDEFGHIJKLMNOPQRSTUVWXYZ0123456789'''
