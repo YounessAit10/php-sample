@@ -52,13 +52,20 @@ pipeline {
             }
         }
 
+
         stage('GitLeaks') {
-            options { timeout(time: 5, unit: 'MINUTES') }
+            options {
+                timeout(time: 5, unit: 'MINUTES')
+            }
+
             steps {
                 sh '''#!/bin/bash
                     set -euo pipefail
 
-                    [ -d "$WORKSPACE/.git" ] || { echo "ERREUR : .git absent du workspace"; exit 1; }
+                    [ -d "$WORKSPACE/.git" ] || {
+                        echo "ERREUR : .git absent du workspace"
+                        exit 1
+                    }
 
                     docker run --rm \
                         --volumes-from "$(hostname)" \
@@ -66,27 +73,32 @@ pipeline {
                         -e GIT_CONFIG_COUNT=1 \
                         -e GIT_CONFIG_KEY_0=safe.directory \
                         -e GIT_CONFIG_VALUE_0="$WORKSPACE" \
-                        zricethezav/gitleaks:latest \
+                        zricethezav/gitleaks:v8.30.0 \
                         detect \
                         --source="$WORKSPACE" \
                         --no-banner \
                         --redact \
                         --report-format json \
                         --report-path "$WORKSPACE/gitleaks-report.json" \
-                        2>&1 | tee gitleaks.log
+                        2>&1 | tee "$WORKSPACE/gitleaks.log"
 
-                    if grep -qE '(^|[^0-9])0 commits scanned' gitleaks.log; then
+                    if grep -qE '(^|[^0-9])0 commits scanned' "$WORKSPACE/gitleaks.log"; then
                         echo "ERREUR : aucun commit scanné, vérifier le montage du workspace"
                         exit 1
                     fi
                 '''
             }
+
             post {
                 always {
-                    archiveArtifacts artifacts: 'gitleaks-report.json, gitleaks.log', allowEmptyArchive: true
+                    archiveArtifacts(
+                        artifacts: 'gitleaks-report.json,gitleaks.log',
+                        allowEmptyArchive: true
+                    )
                 }
             }
         }
+
 
         // stage('Trivy FS Scan') {
         //     steps {
