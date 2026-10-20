@@ -1,6 +1,0 @@
-title = "Gitleaks Test Config"
-
-[[rules]]
-id = "test-secret"
-description = "Detect the synthetic test token"
-regex = '''db_password'''

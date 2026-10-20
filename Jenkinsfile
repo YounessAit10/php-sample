@@ -69,7 +69,6 @@ pipeline {
                         zricethezav/gitleaks:latest \
                         detect \
                         --source="$WORKSPACE" \
-                        --config="$WORKSPACE/gitleaks-test.toml" \
                         --no-banner \
                         --redact \
                         --report-format json \
