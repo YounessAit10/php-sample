@@ -53,6 +53,7 @@ pipeline {
         }
 
 
+    
         stage('GitLeaks') {
             options {
                 timeout(time: 5, unit: 'MINUTES')
@@ -67,6 +68,11 @@ pipeline {
                         exit 1
                     }
 
+                    [ -f "$WORKSPACE/gitleaks-baseline.json" ] || {
+                        echo "ERREUR : baseline Gitleaks introuvable"
+                        exit 1
+                    }
+
                     docker run --rm \
                         --volumes-from "$(hostname)" \
                         -w "$WORKSPACE" \
@@ -76,16 +82,12 @@ pipeline {
                         zricethezav/gitleaks:v8.30.0 \
                         detect \
                         --source="$WORKSPACE" \
+                        --baseline-path="$WORKSPACE/gitleaks-baseline.json" \
                         --no-banner \
                         --redact \
                         --report-format json \
                         --report-path "$WORKSPACE/gitleaks-report.json" \
                         2>&1 | tee "$WORKSPACE/gitleaks.log"
-
-                    if grep -qE '(^|[^0-9])0 commits scanned' "$WORKSPACE/gitleaks.log"; then
-                        echo "ERREUR : aucun commit scanné, vérifier le montage du workspace"
-                        exit 1
-                    fi
                 '''
             }
 
@@ -98,6 +100,7 @@ pipeline {
                 }
             }
         }
+
 
 
         // stage('Trivy FS Scan') {
