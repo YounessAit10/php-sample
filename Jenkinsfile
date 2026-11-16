@@ -35,11 +35,20 @@ pipeline {
 
         stage('SonarQube Analysis') {
             steps {
-                script {
-                    def scannerHome = tool 'SonarScanner'
-                    withSonarQubeEnv('SonarQube') {
-                        sh "${scannerHome}/bin/sonar-scanner"
-                    }
+                withSonarQubeEnv('SonarQube') {
+                    sh '''
+                        if [ -n "${SONAR_AUTH_TOKEN:-}" ]; then
+                            echo "SONAR_AUTH_TOKEN : PRESENT"
+                        else
+                            echo "SONAR_AUTH_TOKEN : ABSENT"
+                        fi
+        
+                        if [ -n "${SONAR_TOKEN:-}" ]; then
+                            echo "SONAR_TOKEN : PRESENT"
+                        else
+                            echo "SONAR_TOKEN : ABSENT"
+                        fi
+                    '''
                 }
             }
         }
