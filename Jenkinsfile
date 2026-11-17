@@ -106,24 +106,6 @@ pipeline {
         }
 
 
-
-        // stage('Trivy FS Scan') {
-        //     steps {
-        //         sh '''
-        //             docker run --rm \
-        //                 --volumes-from jenkins \
-        //                 -w "$WORKSPACE" \
-        //                 -v trivy-cache:/root/.cache/ \
-        //                 aquasec/trivy:latest fs \
-        //                 --scanners vuln,secret,misconfig \
-        //                 --severity HIGH,CRITICAL \
-        //                 --ignore-unfixed \
-        //                 --exit-code 1 \
-        //                 .
-        //         '''
-        //     }
-        // }
-
         stage('Build Production Image') {
             when { anyOf { branch 'main'; branch 'dev' } }
             steps {

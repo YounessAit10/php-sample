@@ -2,7 +2,7 @@ FROM php:8.2-cli
 
 WORKDIR /app
 
-# Install system dependencies required by Composer
+# Install system dependencies system required by Composer
 RUN apt-get update \
     && apt-get install -y --no-install-recommends \
         unzip \
